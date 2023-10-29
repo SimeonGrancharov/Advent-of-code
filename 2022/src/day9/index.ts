@@ -7,13 +7,13 @@ type PositionT = {
   y: number
 }
 
-class RopeEnding {
+class RopeKnot {
   private currentPosition: PositionT
 
   constructor() {
     this.currentPosition = {
-      x: 50,
-      y: 50,
+      x: 0,
+      y: 0,
     }
   }
 
@@ -44,6 +44,44 @@ class RopeEnding {
   })
 }
 
+class RopeKnotWithAdjacentPoint extends RopeKnot {
+  private adjacentKnot: RopeKnot
+
+  constructor(adjacentTo: RopeKnot | RopeKnotWithAdjacentPoint) {
+    super()
+
+    this.adjacentKnot = adjacentTo
+  }
+
+  moveToAdjacentKnot = (): void => {
+    const adjacentKnotPosition = this.adjacentKnot.getPosition()
+    const knotPosition = this.getPosition()
+
+    const dX = adjacentKnotPosition.x - knotPosition.x
+    const dY = adjacentKnotPosition.y - knotPosition.y
+
+    const absoluteDX = Math.abs(dX)
+    const absoluteDY = Math.abs(dY)
+
+    // Then the tail is adjacent to the head
+    if (absoluteDX <= 1 && absoluteDY <= 1) {
+      return
+    }
+
+    if (dX === 0) {
+      // Move by the Y axis
+      this.move(dY > 0 ? 'up' : 'down')
+    } else if (dY === 0) {
+      // Move on the X axis
+      this.move(dX > 0 ? 'right' : 'left')
+    } else {
+      // Move diagonally
+      this.move(dY > 0 ? 'up' : 'down')
+      this.move(dX > 0 ? 'right' : 'left')
+    }
+  }
+}
+
 function getDirectionFromInput(input: string): DirectionT {
   if (input === 'R') {
     return 'right'
@@ -54,13 +92,15 @@ function getDirectionFromInput(input: string): DirectionT {
   } else if (input === 'U') {
     return 'up'
   } else {
-    throw new Error('Not supported Direction! Check again')
+    throw new Error(`Not supported Direction ${input}! Terminating`)
   }
 }
 
-function solution1(data: string[]) {
-  const head = new RopeEnding()
-  const tail = new RopeEnding()
+function solution1() {
+  const data = loadDataFromFile(__dirname + '/input.txt')
+
+  const head = new RopeKnot()
+  const tail = new RopeKnotWithAdjacentPoint(head)
   const tailPositions = new Set<string>(['50 50'])
 
   for (const move of data) {
@@ -73,23 +113,50 @@ function solution1(data: string[]) {
       repetition++
     ) {
       head.move(direction)
-      const headPosition = head.getPosition()
-      const tailPosition = tail.getPosition()
-      const dX = headPosition.x - tailPosition.x
-      const dY = headPosition.y - tailPosition.y
 
-      // Then the tail is adjacent to the head
-      if (Math.abs(dX) <= 1 && Math.abs(dY) <= 1) {
-        continue
+      tail.moveToAdjacentKnot()
+
+      const newTailPosition = tail.getPosition()
+
+      tailPositions.add(`${newTailPosition.x} ${newTailPosition.y}`)
+    }
+  }
+
+  return tailPositions.size
+}
+
+function solution2() {
+  const data = loadDataFromFile(__dirname + '/input.txt')
+
+  const middleKnots = 8
+  const head = new RopeKnot()
+  const knots: RopeKnotWithAdjacentPoint[] = []
+
+  for (let i = 1; i <= middleKnots; i++) {
+    const prev = knots[knots.length - 1]
+
+    knots.push(new RopeKnotWithAdjacentPoint(prev !== undefined ? prev : head))
+  }
+
+  const tail = new RopeKnotWithAdjacentPoint(knots[knots.length - 1])
+  const tailPositions = new Set<string>(['0 0'])
+
+  for (const move of data) {
+    const [dir, repetitions] = move.split(' ')
+    const direction = getDirectionFromInput(dir)
+
+    for (
+      let repetition = 1;
+      repetition <= parseInt(repetitions);
+      repetition++
+    ) {
+      head.move(direction)
+
+      for (let knotNumber = 1; knotNumber <= middleKnots; knotNumber++) {
+        knots[knotNumber - 1].moveToAdjacentKnot()
       }
 
-      if (headPosition.x !== tailPosition.x) {
-        tail.move(headPosition.x > tailPosition.x ? 'right' : 'left')
-      }
-
-      if (headPosition.y !== tailPosition.y) {
-        tail.move(headPosition.y > tailPosition.y ? 'up' : 'down')
-      }
+      tail.moveToAdjacentKnot()
 
       const newTailPosition = tail.getPosition()
 
@@ -101,11 +168,11 @@ function solution1(data: string[]) {
 }
 
 function main(): void {
-  const data = loadDataFromFile(__dirname + '/input.txt')
-
-  const visitedPlaces = solution1(data)
-
+  const visitedPlaces = solution1()
   console.log('============ Solution 1 ========== ', visitedPlaces)
+
+  const visitedPlaces2 = solution2()
+  console.log('============ Solution 2 ========== ', visitedPlaces2)
 }
 
 main()
