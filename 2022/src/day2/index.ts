@@ -1,7 +1,7 @@
 const fs = require('fs')
 
 const readInput = () => {
-  const input = fs.readFileSync('./input.txt')
+  const input = fs.readFileSync(__dirname + '/input.txt')
 
   return input.toString()
 }
@@ -44,7 +44,7 @@ const part1 = () => {
     }
   }
 
-  console.log(result)
+  console.log('part 1', result)
 }
 
 const TargetResultToPoints: Record<OwnChoiceT, number> = {
@@ -59,7 +59,7 @@ const part2 = () => {
 
   for (const round of data.split('\n')) {
     if (!round) {
-      console.log('No round skipping. Noviq red nakraq :|')
+      console.log('No round skipping.')
       continue
     }
 
@@ -77,8 +77,9 @@ const part2 = () => {
       }
     }
   }
-  console.log(result)
+
+  console.log('part 2', result)
 }
 
-//part1();
+part1()
 part2()
