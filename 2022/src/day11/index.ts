@@ -45,7 +45,10 @@ function parseOutput(data: string): { next: number } {
   }
 }
 
-function parseMonkeys(input: string[]): Map<number, Monkey> {
+function parseMonkeys(
+  input: string[],
+  monkeyType: 'bad' | 'good'
+): Map<number, Monkey> {
   const result: Map<number, Monkey> = new Map()
 
   let row = 0
@@ -73,13 +76,14 @@ function parseMonkeys(input: string[]): Map<number, Monkey> {
 
   // We must let the monkeys decide what their siblings are
   for (const monkey of result.values()) {
-    monkey.setNeighbours(result)
+    monkey.setNeighbours(result, monkeyType === 'bad')
   }
 
   return result
 }
 
 class Monkey {
+  private relieve: (item: number) => number = () => 0
   private items: number[]
   private operation: OperationT
   private condition: ConditionT
@@ -103,7 +107,7 @@ class Monkey {
     this.inspectedItemsCount = 0
   }
 
-  setNeighbours = (monkeys: Map<number, Monkey>) => {
+  setNeighbours = (monkeys: Map<number, Monkey>, areMonkeysBad: boolean) => {
     const firstSibling = monkeys.get(this.output.true.next)
 
     if (firstSibling) {
@@ -115,13 +119,22 @@ class Monkey {
     if (secondSibling) {
       this.neighbours.set(this.output.false.next, secondSibling)
     }
+
+    if (areMonkeysBad) {
+      const divisor = Array.from(monkeys.values()).reduce(
+        (div, m) => div * m.condition.arg,
+        1
+      )
+      console.log('divisor >>>>>>> ', divisor)
+      this.relieve = (item: number) => item % divisor
+    } else {
+      this.relieve = (item: number) => Math.trunc(item / 3)
+    }
   }
 
   ping = (): void => {
     while (this.items.length > 0) {
       const item = this.items.shift()
-
-      console.log(' >>> Inspects item with level: ', item)
 
       if (!item) {
         console.log('Item not found eh')
@@ -130,22 +143,16 @@ class Monkey {
 
       const worryLevelOfInspectedItem = this.inspect(item)
 
-      const worryLevelAfterRelief = Math.trunc(worryLevelOfInspectedItem / 3)
+      const worryLevelAfterRelief = this.relieve(worryLevelOfInspectedItem)
 
       const testPassed = this.test(worryLevelAfterRelief)
 
       if (testPassed) {
-        console.log(
-          ` >>>> Throwing item to ${this.output.true.next}, item: ${worryLevelAfterRelief}`
-        )
         this.throwItem(
           this.getSibling(this.output.true.next),
           worryLevelAfterRelief
         )
       } else {
-        console.log(
-          ` >>>> Throwing item to ${this.output.false.next}, item: ${worryLevelAfterRelief}`
-        )
         this.throwItem(
           this.getSibling(this.output.false.next),
           worryLevelAfterRelief
@@ -165,14 +172,10 @@ class Monkey {
 
     switch (this.operation.type) {
       case 'add': {
-        console.log(` >>> Worry level adds with ${arg}. Result: ${item + arg}`)
         return item + arg
       }
 
       case 'multiply': {
-        console.log(
-          ` >>> Worry level multiplied with ${arg}. Result: ${item * arg}`
-        )
         return item * arg
       }
     }
@@ -186,13 +189,6 @@ class Monkey {
         result = item / this.condition.arg
       }
     }
-
-    console.log(
-      ` >>> Test divisible by ${this.condition.arg}: Result: `,
-      result,
-      item / this.condition.arg,
-      result === Math.trunc(result)
-    )
 
     return result === Math.trunc(result)
   }
@@ -210,16 +206,18 @@ class Monkey {
   }
 }
 
-function solution1(data: string[]): number {
-  const monkeys = parseMonkeys(data)
+function solution(data: string[], harsh: boolean): number {
+  const monkeys = parseMonkeys(data, !harsh ? 'good' : 'bad')
 
-  const rounds = 20
+  const rounds = harsh ? 10000 : 20
 
   for (let round = 1; round <= rounds; round++) {
     for (const monkey of monkeys.values()) {
       monkey.ping()
     }
   }
+
+  console.log(monkeys.values())
 
   return Array.from(monkeys.values())
     .sort(
@@ -231,9 +229,13 @@ function solution1(data: string[]): number {
 
 function main(): void {
   const data = loadDataFromFile(__dirname + '/input.txt')
-  const res = solution1(data)
+  const res = solution(data, false)
+
+  const res2 = solution(data, true)
   // 55930
   console.log('================ Solution 1 ============== ', res)
+  // 55930
+  console.log('================ Solution 2 ============== ', res2)
 
   // const commands2 = parseCommands(data)
   // const plot = solution2(commands2)
