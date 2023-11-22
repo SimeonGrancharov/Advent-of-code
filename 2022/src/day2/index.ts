@@ -27,7 +27,7 @@ const MovesByResults: Record<number, string[]> = {
   6: ['A Y', 'B Z', 'C X'],
 }
 
-const part1 = () => {
+const solution1 = () => {
   const data = readInput()
 
   let result = 0
@@ -53,7 +53,7 @@ const TargetResultToPoints: Record<OwnChoiceT, number> = {
   Z: 6,
 }
 
-const part2 = () => {
+const solution2 = () => {
   const data = readInput()
   let result = 0
 
@@ -81,5 +81,5 @@ const part2 = () => {
   console.log('part 2', result)
 }
 
-part1()
-part2()
+solution1()
+solution2()

@@ -8,7 +8,6 @@
     "rootDir": "src",
     "noEmit": true,
     "resolveJsonModule": true,
-    "allowJs": true,
     "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
