@@ -50,11 +50,7 @@ function lookAround(block: BlockT, map: MapT): BlockT[] {
   ]
 
   return neighbours.filter((neighbour) => {
-    return (
-      neighbour !== undefined &&
-      canMoveTo(block, neighbour) &&
-      !neighbour.isStartBlock
-    )
+    return neighbour !== undefined && canMoveTo(block, neighbour)
   }) as BlockT[]
 }
 
@@ -66,7 +62,7 @@ function visitBlock(
   distanceFromStart: number
 ) {
   if (block.isEndBlock) {
-    result.push([...pathToBlock, block])
+    result.push([...pathToBlock])
 
     return
   }
@@ -94,6 +90,14 @@ function visitBlock(
   }
 }
 
+function cleanUp(map: MapT): void {
+  map.forEach((row) =>
+    row.map((block) => {
+      block.distance = null
+    })
+  )
+}
+
 function solution1(map: MapT) {
   let startingBlock: BlockT | undefined
 
@@ -114,12 +118,38 @@ function solution1(map: MapT) {
 
   visitBlock(startingBlock, path, result, map, 0)
 
-  return (
-    result
-      .sort((a, b) => a.length - b.length)[0]
-      .map((k) => k.char)
-      .join('').length - 1 // -1 Because we dont visit E :|
-  )
+  return result
+    .sort((a, b) => a.length - b.length)[0]
+    .map((k) => k.char)
+    .join('').length
+}
+
+function solution2(map: MapT) {
+  cleanUp(map)
+
+  const allStartingLocations: BlockT[] = []
+
+  map.forEach((row) => {
+    row.forEach((block) => {
+      if (block.char === 'a' || block.char === 'S') {
+        allStartingLocations.push(block)
+      }
+    })
+  })
+
+  const result: BlockT[][] = []
+  const path: BlockT[] = []
+
+  for (const startingBlock of allStartingLocations) {
+    visitBlock(startingBlock, path, result, map, 0)
+
+    cleanUp(map)
+  }
+
+  return result
+    .sort((a, b) => a.length - b.length)[0]
+    .map((k) => k.char)
+    .join('').length
 }
 
 function main(): void {
@@ -128,18 +158,13 @@ function main(): void {
 
   const res = solution1(heightMap)
 
-  // const res2 = solution(data)
   // 339
   console.log('================ Solution 1 ============== ', res)
-  // 55930
-  // console.log('================ Solution 2 ============== ', res2)
 
-  // const commands2 = parseCommands(data)
-  // const plot = solution2(commands2)
-  // console.log('============ Solution 2 ========== \n')
-  // console.log(draw(plot))
+  // 332
+  const res2 = solution2(heightMap)
+  // 55930
+  console.log('================ Solution 2 ============== ', res2)
 }
 
 main()
-//
-//
