@@ -2,7 +2,7 @@ import { loadDataFromFile } from '../utility'
 
 type DataT = string[][]
 
-function search1(
+function searchInDirectionForWord(
   data: DataT,
   row: number,
   col: number,
@@ -160,19 +160,18 @@ function search1(
 
 function print(
   board: string[][],
-  res: { startRow: number; endRow: number; startCol: number; endCol: number }
+  res: { startRow: number; endRow: number; startCol: number; endCol: number },
+  word: string
 ) {
-  const xmas = 'XMAS'
-
-  for (let char = 0; char <= xmas.length - 1; char++) {
+  for (let char = 0; char <= word.length - 1; char++) {
     // EQUATOR
     if (res.startRow === res.endRow) {
       // East
       if (res.startCol < res.endCol) {
-        board[res.startRow][res.startCol + char] = xmas[char]
+        board[res.startRow][res.startCol + char] = word[char]
         // West
       } else {
-        board[res.startRow][res.startCol - char] = xmas[char]
+        board[res.startRow][res.startCol - char] = word[char]
       }
 
       continue
@@ -181,35 +180,35 @@ function print(
     if (res.startRow < res.endRow) {
       // south
       if (res.startCol === res.endCol) {
-        board[res.startRow + char][res.startCol] = xmas[char]
+        board[res.startRow + char][res.startCol] = word[char]
         continue
       }
 
       // South east
       if (res.startCol < res.endCol) {
-        board[res.startRow + char][res.startCol + char] = xmas[char]
+        board[res.startRow + char][res.startCol + char] = word[char]
         continue
       }
 
       // South west
-      board[res.startRow + char][res.startCol - char] = xmas[char]
+      board[res.startRow + char][res.startCol - char] = word[char]
       continue
     }
 
     // North
     if (res.startCol === res.endCol) {
-      board[res.startRow - char][res.endCol] = xmas[char]
+      board[res.startRow - char][res.endCol] = word[char]
       continue
     }
 
     // North east
     if (res.startCol < res.endCol) {
-      board[res.startRow - char][res.startCol + char] = xmas[char]
+      board[res.startRow - char][res.startCol + char] = word[char]
       continue
     }
 
     // North west
-    board[res.startRow - char][res.startCol - char] = xmas[char]
+    board[res.startRow - char][res.startCol - char] = word[char]
   }
 }
 
@@ -226,22 +225,21 @@ function part1(data: DataT) {
 
   for (let row = 0; row <= data.length - 1; row++) {
     for (let col = 0; col <= data[row].length - 1; col++) {
-      directions.forEach((direction) => {
-        const res = search1(data, row, col, direction, 'XMAS')
+      if (data[row][col] === 'X') {
+        directions.forEach((direction) => {
+          const res = searchInDirectionForWord(
+            data,
+            row,
+            col,
+            direction,
+            'XMAS'
+          )
 
-        if (res !== undefined) {
-          foundWordsCount++
-
-          // console.log(' found result for ', {
-          //   row,
-          //   col,
-          //   direction,
-          //   data: res,
-          // })
-
-          // print(result, res)
-        }
-      })
+          if (res !== undefined) {
+            foundWordsCount++
+          }
+        })
+      }
     }
   }
 
@@ -257,26 +255,30 @@ function part2(data: DataT) {
 
   let foundWordsCount = 0
 
-  const directions = ['n', 's', 'e', 'w', 'nw', 'ne', 'se', 'sw'] as const
-
   for (let row = 0; row <= data.length - 1; row++) {
     for (let col = 0; col <= data[row].length - 1; col++) {
-      directions.forEach((direction) => {
-        const res = search1(data, row, col, direction)
+      if (data[row][col] === 'A') {
+        const northWestS = searchInDirectionForWord(data, row, col, 'nw', 'AS')
+        const northWestM = searchInDirectionForWord(data, row, col, 'nw', 'AM')
 
-        if (res !== undefined) {
+        const northEastS = searchInDirectionForWord(data, row, col, 'ne', 'AS')
+        const northEastM = searchInDirectionForWord(data, row, col, 'ne', 'AM')
+
+        const southEastS = searchInDirectionForWord(data, row, col, 'se', 'AS')
+        const southEastM = searchInDirectionForWord(data, row, col, 'se', 'AM')
+
+        const southWestS = searchInDirectionForWord(data, row, col, 'sw', 'AS')
+        const southWestM = searchInDirectionForWord(data, row, col, 'sw', 'AM')
+
+        const northWestSouthEastDiag =
+          (northWestS && southEastM) || (northWestM && southEastS)
+        const northEastSouthWestDiag =
+          (northEastS && southWestM) || (northEastM && southWestS)
+
+        if (northEastSouthWestDiag && northWestSouthEastDiag) {
           foundWordsCount++
-
-          // console.log(' found result for ', {
-          //   row,
-          //   col,
-          //   direction,
-          //   data: res,
-          // })
-
-          // print(result, res)
         }
-      })
+      }
     }
   }
 
