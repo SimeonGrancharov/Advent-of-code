@@ -48,24 +48,22 @@ function parseInput(input: string[]) {
   return result
 }
 
-function part1(input: string[]) {
-  const parsed = parseInput(input)
-
+function extractInputs(input: DataT, extractValid: boolean = true): string[][] {
   const validInputs: string[][] = []
 
-  for (const update of parsed.updates) {
+  for (const update of input.updates) {
     let isValid = true
 
     for (let index = 0; index <= update.length - 1; index++) {
       const seq = update[index]
-      const beforeRule = parsed.beforeLookup[seq]
+      const beforeRule = input.beforeLookup[seq]
 
       if (beforeRule) {
         isValid = update.slice(index + 1).every((x) => beforeRule.includes(x))
       }
 
       if (isValid) {
-        const afterRule = parsed.afterLookup[seq]
+        const afterRule = input.afterLookup[seq]
 
         if (afterRule) {
           isValid = update.slice(0, index).every((x) => afterRule.includes(x))
@@ -82,10 +80,48 @@ function part1(input: string[]) {
     }
   }
 
+  return input.updates.filter((update) =>
+    extractValid ? validInputs.includes(update) : !validInputs.includes(update)
+  )
+}
+
+function part1(input: string[]) {
+  const parsed = parseInput(input)
+
+  const validInputs = extractInputs(parsed)
+
   return validInputs.reduce((sum, update) => {
     const middle = parseInt(update[Math.floor(update.length / 2)])
 
-    console.log(middle)
+    return sum + middle
+  }, 0)
+}
+
+function part2(input: string[]) {
+  const parsed = parseInput(input)
+
+  const invalidInputs = extractInputs(parsed, false)
+
+  const newInputs = [...invalidInputs.map((x) => [...x])]
+
+  for (const input of newInputs) {
+    input.sort((a, b) => {
+      const beforeRule = parsed.beforeLookup[a]
+      const afterRule = parsed.afterLookup[a]
+      let sorting = 0
+
+      if (afterRule?.includes(b)) {
+        sorting = 1
+      } else if (beforeRule?.includes(b)) {
+        sorting = -1
+      }
+
+      return sorting
+    })
+  }
+
+  return newInputs.reduce((sum, update) => {
+    const middle = parseInt(update[Math.floor(update.length / 2)])
 
     return sum + middle
   }, 0)
@@ -97,8 +133,8 @@ function main() {
   console.log('============== Part 1 ================')
   console.log(part1(data))
   console.log('\n\n')
-  // console.log('============== Part 2 ================')
-  // console.log(part2(data.map((x) => x.split(''))))
+  console.log('============== Part 2 ================')
+  console.log(part2(data))
 }
 
 main()
