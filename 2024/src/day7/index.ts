@@ -95,7 +95,7 @@ function part2(data: DataT): number {
     const res = entry[0]
     let resultForEntry = 0
     const operands = entry[1]
-    const operators: ('*' | '+')[][] = []
+    const operators: ('*' | '+' | '||')[][] = []
 
     generateOperators(
       operands.length - 1,
