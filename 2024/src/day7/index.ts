@@ -40,7 +40,7 @@ function generateOperators(
 function evaluateExpression(
   leftOperand: number,
   rightOperand: number,
-  operator: '+' | '*'
+  operator: '+' | '*' | '||'
 ): number {
   switch (operator) {
     case '+': {
@@ -50,10 +50,12 @@ function evaluateExpression(
     case '*': {
       return leftOperand * rightOperand
     }
+
+    case '||': {
+      return parseInt(`${leftOperand}${rightOperand}`)
+    }
   }
 }
-
-const differences: any = {}
 
 function part1(data: DataT): number {
   let sum = 0
@@ -77,7 +79,6 @@ function part1(data: DataT): number {
       }
 
       if (resultForEntry === res) {
-        differences[res] = [...(differences[res] ?? []), 'mine']
         sum += res
         break
       }
@@ -88,7 +89,39 @@ function part1(data: DataT): number {
 }
 
 function part2(data: DataT): number {
-  return 0
+  let sum = 0
+
+  for (const entry of data) {
+    const res = entry[0]
+    let resultForEntry = 0
+    const operands = entry[1]
+    const operators: ('*' | '+')[][] = []
+
+    generateOperators(
+      operands.length - 1,
+      [],
+      ['+', '*', '||'] as const,
+      operators
+    )
+
+    for (const currentOperators of operators) {
+      resultForEntry = operands[0]
+      for (let index = 0; index <= currentOperators.length - 1; index++) {
+        resultForEntry = evaluateExpression(
+          resultForEntry,
+          operands[index + 1],
+          currentOperators[index]
+        )
+      }
+
+      if (resultForEntry === res) {
+        sum += res
+        break
+      }
+    }
+  }
+
+  return sum
 }
 
 function main() {
@@ -98,9 +131,9 @@ function main() {
 
   console.log('============== Part 1 ================')
   console.log(part1(parsed))
-  // console.log('\n\n')
-  // console.log('============== Part 2 ================')
-  // console.log(part2(parsed))
+  console.log('\n\n')
+  console.log('============== Part 2 ================')
+  console.log(part2(parsed))
 }
 
 main()
