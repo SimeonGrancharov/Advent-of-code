@@ -50,57 +50,81 @@ function part1(data: (string | number)[]) {
   return sum
 }
 
-function part2(data: string[]) {
+function part2(data: (string | number)[]) {
   const work = [...data]
-  let sum = 0
-  let getPointer = data.length - 1
 
-  for (let index = 0; index <= getPointer; index++) {
-    let spaces = 0
+  // Start from back to start
+  for (let index = data.length - 1; index >= 0; index--) {
+    let file: undefined | { size: number; id: number; startingIndex: number }
 
-    while (data[index] === '.') {
-      spaces++
+    // If an symbol other than dot is found, start reading file
+    if (data[index] !== '.') {
+      file = {
+        id: data[index] as number,
+        size: 0,
+        startingIndex: 0,
+      }
+
+      // While we match the same file id -> continue
+      while (data[index] === file.id) {
+        file.size++
+        index--
+      }
+
+      // Save where the file starts for easier replacement after
+      file.startingIndex = index + 1
+      // Hacky but we sae on variable for the while loop (shrug)
+      index++
     }
 
-    if (!spaces) {
+    // Just TS stuff
+    if (!file) {
       continue
     }
 
-    // Now we know how much spaces should be filled -> start searcing appropriate file
+    let space: { index: number; size: number } | undefined
 
-    while (data[getPointer] === '.') {
-      getPointer--
-    }
+    // Start searching spaces always from the start.
+    // Can be optimised not to read them from start but it got late
+    for (let s = 0; s <= index; s++) {
+      // if a space is matched start consuming it
+      if (work[s] === '.') {
+        space = { index: s, size: 0 }
 
-    const fileIdToBeReplaced = data[getPointer]
-    let getPointerActual = getPointer
-    let fileSize = 0
-    let foundFile = false
+        // consume consume
+        while (work[s] === '.') {
+          space.size++
+          s++
+        }
 
-    while (fileSize <= spaces && getPointerActual > 0) {
-      while (data[getPointerActual] === fileIdToBeReplaced) {
-        fileSize++
-        getPointerActual--
+        // If the found space can fit the file, stop searching
+        if (space.size >= file?.size) {
+          break
+        }
+
+        space = undefined
       }
     }
 
-    if (foundFile) {
-      for (let i = 0; i <= fileSize; i++) {
-        work[index + i] = fileIdToBeReplaced
-        work[getPointer + i] = '.'
-      }
-
-      getPointer = getPointerActual
+    // If there is no space suitable found, bye, we can't refit this file :/
+    if (!space) {
+      continue
     }
 
-    // console.log(work.join(''), index, getPointer)
+    // The easiest part, just swap them symbols
+    for (let sI = 0; sI < file.size; sI++) {
+      if (!space) break
+
+      work[space.index + sI] = file.id
+      work[file.startingIndex + sI] = '.'
+    }
   }
-  //
-  // console.log('0099811188827773336446555566..............')
-  // console.log(work.join(''))
-  return sum
-}
 
+  return work.reduce<number>(
+    (s, a, i) => s + (typeof a === 'number' ? (a as number) * i : 0),
+    0
+  )
+}
 function main() {
   const data = loadDataFromFile(__dirname + '/data.txt')
 
@@ -109,8 +133,8 @@ function main() {
   console.log('============== Part 1 ================')
   console.log(part1(input))
   console.log('\n\n')
-  // console.log('============== Part 2 ================')
-  // console.log(part2(data))
+  console.log('============== Part 2 ================')
+  console.log(part2(input))
 }
 
 main()
