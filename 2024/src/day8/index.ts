@@ -43,48 +43,94 @@ function part1(input: DataT) {
       const dR = nestedRowIndex - rowIndex
       const dC = nestedColIndex - colIndex
 
-      const antinodeRow = nestedRowIndex + dR
-      const antinodeCol = nestedColIndex + dC
+      const antinode = getNewAntinode(
+        input,
+        nestedRowIndex,
+        nestedColIndex,
+        dR,
+        dC
+      )
 
-      // Then the antinode is out of bounds
-      if (
-        antinodeRow < 0 ||
-        antinodeRow >= input.length ||
-        antinodeCol < 0 ||
-        antinodeCol >= input[rowIndex].length
-      ) {
+      if (!antinode) {
         return
       }
 
-      antinodeCoords.add(`${antinodeRow}-${antinodeCol}`)
-
-      // console.log(
-      //   ' for element at ',
-      //   rowIndex,
-      //   colIndex,
-      //   nestedRowIndex,
-      //   nestedColIndex,
-      //   dR,
-      //   dC,
-      //   antinodeRow,
-      //   antinodeCol
-      // )
-      // print(input, antinodeCoords)
+      antinodeCoords.add(`${antinode[0]}-${antinode[1]}`)
     })
-
-    // console.log(
-    //   ' For element on ',
-    //   rowIndex,
-    //   colIndex,
-    //   ' antennas are ',
-    //   antennas
-    // )
   })
 
   return antinodeCoords.size
 }
 
-function part2(input: DataT) {}
+function getNewAntinode(
+  input: string[][],
+  cR: number,
+  cC: number,
+  dR: number,
+  dC: number
+): [number, number] | undefined {
+  const antinodeRow = cR + dR
+  const antinodeCol = cC + dC
+
+  // Then the antinode is out of bounds
+  if (
+    antinodeRow < 0 ||
+    antinodeRow >= input.length ||
+    antinodeCol < 0 ||
+    antinodeCol >= input[cR].length
+  ) {
+    return
+  }
+
+  return [antinodeRow, antinodeCol]
+}
+
+function part2(input: DataT) {
+  const antinodeCoords: Set<string> = new Set()
+
+  traverse(input, (el, rowIndex, colIndex) => {
+    if (el === '.') {
+      return
+    }
+
+    traverse(input, (nestedEl, nestedRowIndex, nestedColIndex) => {
+      if (el !== nestedEl) {
+        return
+      }
+
+      if (nestedRowIndex === rowIndex && nestedColIndex === colIndex) {
+        return
+      }
+
+      // If line is found then we immediately add the two antennas as antinodes
+      antinodeCoords.add(`${rowIndex}-${colIndex}`)
+      antinodeCoords.add(`${nestedRowIndex}-${nestedColIndex}`)
+
+      const dR = nestedRowIndex - rowIndex
+      const dC = nestedColIndex - colIndex
+
+      let sourceRow = nestedRowIndex
+      let sourceCol = nestedColIndex
+
+      while (true) {
+        const antinode = getNewAntinode(input, sourceRow, sourceCol, dR, dC)
+
+        if (!antinode) {
+          break
+        }
+
+        sourceRow = antinode[0]
+        sourceCol = antinode[1]
+
+        antinodeCoords.add(`${antinode[0]}-${antinode[1]}`)
+      }
+    })
+  })
+
+  print(input, antinodeCoords)
+
+  return antinodeCoords.size
+}
 
 function main() {
   const data = loadDataFromFile(__dirname + '/data.txt').map((x) => x.split(''))
