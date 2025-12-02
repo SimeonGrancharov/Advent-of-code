@@ -17,7 +17,43 @@ function checkIsValid(str: string): boolean {
   return str.slice(0, str.length / 2) !== str.slice(str.length / 2, str.length)
 }
 
-function part1(d: Data) {
+function checkHasValidSequence(str: string): boolean {
+  if (str.length === 1) {
+    return true
+  }
+
+  const len = Math.ceil(str.length / 2)
+
+  if (str.split('').every((sym) => sym === str[0])) {
+    return false
+  }
+
+  let sequence = ''
+
+  for (let l = 2; l <= len; l += 1) {
+    let isInvalid = true
+    sequence = str.slice(0, l)
+
+    const iterations = Math.ceil(str.length / l)
+
+    for (let itt = 1; itt <= iterations; itt++) {
+      const currentSequence = str.slice((itt - 1) * l, itt * l)
+
+      if (currentSequence !== sequence) {
+        isInvalid = false
+        break
+      }
+    }
+
+    if (isInvalid) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function solve(d: Data, check: (str: string) => boolean) {
   const checked: Record<string, boolean> = {}
   let counter = 0
 
@@ -28,7 +64,7 @@ function part1(d: Data) {
       const str = c.toString()
 
       if (checked[str] === undefined) {
-        checked[c.toString()] = checkIsValid(c.toString())
+        checked[c.toString()] = check(c.toString())
       }
 
       counter += checked[c.toString()] ? 0 : c
@@ -44,10 +80,10 @@ function main() {
   const data = prepareData(raw)
 
   console.log('============== Part 1 ================')
-  console.log(part1(data))
+  console.log(solve(data, checkIsValid))
   console.log('\n\n')
-  // console.log('============== Part 2 ================')
-  // console.log(part2(data))
+  console.log('============== Part 2 ================')
+  console.log(solve(data, checkHasValidSequence))
 }
 
 main()
