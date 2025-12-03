@@ -6,6 +6,8 @@ function getLargestDigit(input: string, index: number): [number, number] {
   let largest = -Infinity
   let indexOfLargest = 0
 
+  console.log(' searching in ', input, index)
+
   for (let ind = index; ind <= input.length - 1; ind++) {
     const asNum = parseInt(input[ind])
 
@@ -18,25 +20,32 @@ function getLargestDigit(input: string, index: number): [number, number] {
   return [largest, indexOfLargest]
 }
 
-function getLargestBattery(line: string) {
-  let [firstDigit, index] = getLargestDigit(line, 0)
-  let secondDigit = -Infinity
+function getLargestBattery(line: string, batterySize: number) {
+  let result = ''
+  let shouldSwitch = false
+  let lastIndex = 0
 
-  if (index === line.length - 1) {
-    secondDigit = firstDigit
-    ;[firstDigit] = getLargestDigit(line.split('').reverse().join(''), 1)
-  } else {
-    ;[secondDigit] = getLargestDigit(line, index + 1)
+  while (result.length < batterySize) {
+    const [digit, digitIndex] = getLargestDigit(
+      shouldSwitch ? line.split('').reverse().join('') : line,
+      lastIndex
+    )
+
+    shouldSwitch = digitIndex === line.length - 1
+
+    lastIndex = shouldSwitch ? line.length - digitIndex : digitIndex + 1
+
+    result = shouldSwitch ? `${digit}${result}` : `${result}${digit}`
   }
 
-  return `${firstDigit}${secondDigit}`
+  return result
 }
 
-function part1(d: Data): number {
+function solve(d: Data, batterySize: number): number {
   let result: number = 0
 
   d.forEach((line) => {
-    const battery = getLargestBattery(line)
+    const battery = getLargestBattery(line, batterySize)
 
     console.log(' >> ', battery)
     result += parseInt(battery)
@@ -49,10 +58,10 @@ function main() {
   const data = loadDataFromFile(__dirname + '/data.txt')
 
   console.log('============== Part 1 ================')
-  console.log(part1(data))
+  console.log(solve(data, 2))
   console.log('\n\n')
-  // console.log('============== Part 2 ================')
-  // console.log(solve(data, checkHasValidSequence))
+  console.log('============== Part 2 ================')
+  console.log(solve(data, 12))
 }
 
 main()
